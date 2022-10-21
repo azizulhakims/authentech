@@ -1,6 +1,67 @@
 import React from 'react'
+import { Link } from 'react-router-dom'
+import { getAuth, createUserWithEmailAndPassword, updateProfile, sendEmailVerification, signInWithPopup } from "firebase/auth";
+import app from '../firebase/firebase.init';
+import { toast } from 'react-toastify';
+import { GoogleAuthProvider } from "firebase/auth";
+
+
+
+const auth = getAuth(app)
+
 
 const Register = () => {
+  const googleProvider = new GoogleAuthProvider();
+  //Signup Using Email & Pass
+  const handleSubmit = (e) => {
+    e.preventDefault()
+    // console.log('hello');
+    const name = e.target.name.value
+    const email = e.target.email.value
+    const password = e.target.password.value
+
+
+    // Create Accounts
+    createUserWithEmailAndPassword(auth, email, password)
+      .then(result => {
+        console.log(result.user)
+        // Update Name
+        updateProfile(auth.currentUser, {
+          displayName: name,
+        }).then(() => {
+          toast.success('Name Update')
+          console.log(auth.currentUser.displayName);
+
+          // Email verification
+          sendEmailVerification(auth.currentUser)
+            .then(() => {
+
+              toast.success('please check your email for verification')
+              // Email verification sent!
+              // ...
+            });
+        }).catch((error) => {
+          toast.error(error.message)
+        });
+
+      })
+
+      .catch(error => console.log(error))
+  }
+
+  //Google Signing
+
+  const handleGoogleSignin = () => {
+    signInWithPopup(auth, googleProvider)
+      .then(result => {
+        console.log(result.user);
+      })
+
+
+  }
+
+
+
   return (
     <div className='flex justify-center items-center pt-8'>
       <div className='flex flex-col max-w-md p-6 rounded-md sm:p-10 bg-gray-100 text-gray-900'>
@@ -9,6 +70,7 @@ const Register = () => {
           <p className='text-sm text-gray-400'>Create a new account</p>
         </div>
         <form
+          onSubmit={handleSubmit}
           noValidate=''
           action=''
           className='space-y-12 ng-untouched ng-pristine ng-valid'
@@ -74,7 +136,9 @@ const Register = () => {
           <div className='flex-1 h-px sm:w-16 dark:bg-gray-700'></div>
         </div>
         <div className='flex justify-center space-x-4'>
-          <button aria-label='Log in with Google' className='p-3 rounded-sm'>
+          <button
+            onClick={handleGoogleSignin}
+            aria-label='Log in with Google' className='p-3 rounded-sm'>
             <svg
               xmlns='http://www.w3.org/2000/svg'
               viewBox='0 0 32 32'
@@ -104,9 +168,9 @@ const Register = () => {
         </div>
         <p className='px-6 text-sm text-center text-gray-400'>
           Already have an account yet?{' '}
-          <a href='#' className='hover:underline text-gray-600'>
+          <Link to='/login' className='hover:underline text-gray-600'>
             Sign In
-          </a>
+          </Link>
           .
         </p>
       </div>
